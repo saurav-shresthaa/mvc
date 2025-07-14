@@ -181,16 +181,8 @@
                             <input type="text" class="form-control" id="editTitle" required>
                         </div>
                         <div class="mb-3">
-                            <label for="editAuthor" class="form-label">Author</label>
-                            <input type="text" class="form-control" id="editAuthor" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editContent" class="form-label">Content</label>
-                            <textarea class="form-control" id="editContent" rows="5" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTags" class="form-label">Tags (comma separated)</label>
-                            <input type="text" class="form-control" id="editTags" placeholder="php, mvc, tutorial">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="5" required>{{ $post->description }}</textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -271,10 +263,7 @@
             e.preventDefault();
 
             const postId = parseInt(document.getElementById('editPostId').value);
-            const title = document.getElementById('editTitle').value;
-            const author = document.getElementById('editAuthor').value;
-            const content = document.getElementById('editContent').value;
-            const tags = document.getElementById('editTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const description = document.getElementById('editDescription').value;
 
             // Find and update post
             const postIndex = posts.findIndex(post => post.id === postId);
@@ -282,14 +271,11 @@
                 posts[postIndex] = {
                     ...posts[postIndex],
                     title: title,
-                    author: author,
-                    content: content,
-                    tags: tags
+                    description: description,
                 };
 
-                renderPosts();
-                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-                showAlert('Post updated successfully!', 'success');
+                window.location.reload();
+
             }
         });
 
@@ -298,15 +284,7 @@
             const post = posts.find(p => p.id === postId);
             if (post) {
                 document.getElementById('viewTitle').textContent = post.title;
-                document.getElementById('viewMeta').innerHTML = `
-                    <i class="fas fa-calendar me-1"></i>${post.date}
-                    <i class="fas fa-user ms-3 me-1"></i>${post.author}
-                    <i class="fas fa-eye ms-3 me-1"></i>${post.views} views
-                `;
-                document.getElementById('viewContent').textContent = post.content;
-
-                const tagsHtml = post.tags.map(tag => `<span class="badge bg-secondary me-1">${tag}</span>`).join('');
-                document.getElementById('viewTags').innerHTML = tagsHtml ? `<strong>Tags:</strong> ${tagsHtml}` : '';
+                document.getElementById('viewContent').textContent = post.description;
 
                 new bootstrap.Modal(document.getElementById('viewModal')).show();
             }
@@ -317,9 +295,7 @@
             if (post) {
                 document.getElementById('editPostId').value = postId;
                 document.getElementById('editTitle').value = post.title;
-                document.getElementById('editAuthor').value = post.author;
-                document.getElementById('editContent').value = post.content;
-                document.getElementById('editTags').value = post.tags.join(', ');
+                document.getElementById('editTitle').value = post.title;
 
                 new bootstrap.Modal(document.getElementById('editModal')).show();
             }
