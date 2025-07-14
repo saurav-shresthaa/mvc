@@ -223,7 +223,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
                         <i class="fas fa-trash me-2"></i>Delete Post
                     </button>
                 </div>

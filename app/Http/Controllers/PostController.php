@@ -42,7 +42,7 @@ class PostController extends Controller
             $post = Post::create($validated);
 
             $data['posts'] = Post::all();
-            return view('post', compact('data'));
+            return route('post', compact('data'));
         } catch (Exception $e) {
             return redirect()->back()->withError($e->getMessage());
         }
