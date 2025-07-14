@@ -13,5 +13,5 @@ Route::prefix('/')->controller(PostController::class)->group(function () {
     Route::post('/create', 'create')->name('post.create');
     Route::get('/{id}', 'show')->name('post.show');
     Route::put('/edit/{id}', 'edit')->name('post.edit');
-    Route::post('/delete/{id}', 'delete')->name('post.delete');
+    Route::post('/delete/{id}', 'deletePost')->name('post.delete');
 });

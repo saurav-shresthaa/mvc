@@ -67,14 +67,15 @@ class PostController extends Controller
         }
     }
     
-    public function delete($id)
+    public function deletePost($id)
     {
         try {
             $post = Post::findOrFail($id);
             $post->delete();
 
-            $data['posts'] = Post::all();
-            return view('post', compact('data'));
+            // $data['posts'] = Post::all();
+            return response()->json(['message' => 'Post deleted successfully.']);
+
         } catch (Exception $e) {
             return redirect()->back()->withError($e->getMessage());
         }

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Posts Management - Simple MVC</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -86,15 +87,16 @@
                             </p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <button class="btn btn-sm btn-outline-primary btn-action" onclick="viewPost({{ $post->id }})">
+                                    <button class="btn btn-sm btn-outline-primary btn-action"
+                                        onclick="viewPost({{ $post->id }})">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-warning btn-action"
-                                        onclick="editPost(1, '{{ $post->title }}')">
+                                        onclick="editPost({{ $post->id }}, '{{ $post->title }}')">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger btn-action"
-                                        onclick="deletePost(1, '{{ $post->title }}')">
+                                        onclick="deletePost({{ $post->id }}, '{{ $post->title }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -117,15 +119,15 @@
         </div>
 
         @empty($data['posts'])
-        <!-- Empty State (shown when no posts) -->
-                <div class="text-center py-5" id="emptyState">
-                    <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
-                    <h3 class="text-muted">No Posts Yet</h3>
-                    <p class="text-muted">Start by creating your first post!</p>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-                        <i class="fas fa-plus me-2"></i>Create First Post
-                    </button>
-                </div>
+            <!-- Empty State (shown when no posts) -->
+            <div class="text-center py-5" id="emptyState">
+                <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No Posts Yet</h3>
+                <p class="text-muted">Start by creating your first post!</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                    <i class="fas fa-plus me-2"></i>Create First Post
+                </button>
+            </div>
         @endempty
     </div>
 
@@ -144,9 +146,11 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="createTitle" class="form-label">Post Title</label>
-                            <input type="text" name="title" class="form-control" id="createTitle" placeholder="Enter title of the post..." required>
+                            <input type="text" name="title" class="form-control" id="createTitle"
+                                placeholder="Enter title of the post..." required>
                         </div>
-                        <textarea name="description" id="" placeholder="Enter description of the post..." cols="75" rows="10"></textarea>
+                        <textarea name="description" id="" placeholder="Enter description of the post..." cols="75"
+                            rows="10"></textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -323,62 +327,32 @@
 
         function deletePost(postId, title) {
             document.getElementById('deletePostTitle').textContent = title;
+
             document.getElementById('confirmDeleteBtn').onclick = function () {
-                // Remove post from array
-                posts = posts.filter(post => post.id !== postId);
-                renderPosts();
-                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                showAlert('Post deleted successfully!', 'danger');
+                fetch(`/delete/${postId}`, {
+                    method: 'POST', // or 'POST' if your route is post
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Failed to delete');
+                        return response.json();
+                    })
+                    .then(data => {
+                        window.location.reload(); // ✅ just reload on success
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        showAlert('Error deleting post.', 'danger');
+                    });
             };
 
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
         }
 
-        function renderPosts() {
-            const container = document.getElementById('postsContainer');
-            const emptyState = document.getElementById('emptyState');
-
-            if (posts.length === 0) {
-                container.innerHTML = '';
-                emptyState.classList.remove('d-none');
-                return;
-            }
-
-            emptyState.classList.add('d-none');
-
-            container.innerHTML = posts.map(post => `
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card post-card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">${post.title}</h5>
-                            <p class="post-meta">
-                                <i class="fas fa-calendar me-1"></i>${post.date}
-                                <i class="fas fa-user ms-3 me-1"></i>${post.author}
-                            </p>
-                            <p class="card-text post-content">
-                                ${post.content.length > 100 ? post.content.substring(0, 100) + '...' : post.content}
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    <i class="fas fa-eye me-1"></i>${post.views} views
-                                </small>
-                                <div>
-                                    <button class="btn btn-sm btn-outline-primary btn-action" onclick="viewPost(${post.id})">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-warning btn-action" onclick="editPost(${post.id}, '${post.title}', '${post.content}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger btn-action" onclick="deletePost(${post.id}, '${post.title}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
 
         function showAlert(message, type) {
             const alertDiv = document.createElement('div');
@@ -398,10 +372,6 @@
             }, 5000);
         }
 
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function () {
-            renderPosts();
-        });
     </script>
 </body>
 
