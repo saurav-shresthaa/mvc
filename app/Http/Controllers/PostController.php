@@ -47,21 +47,16 @@ class PostController extends Controller
             return redirect()->back()->withError($e->getMessage());
         }
     }
-    public function edit(Request $request, $id)
+    public function edit(Request $request, Post $post)
     {
         try {
-            $post = Post::findOrFail($id);
-
-            $validated = $request->validate($request->all(), [
+            $validated = $request->validate([
                 'title' => 'required|string',
                 'description' => 'required|string',
             ]);
 
             $post->update($validated);
-
-
-            $data['posts'] = Post::all();
-            return view('post', compact('data'));
+            return redirect()->route('post.index')->with('success', 'Post updated successfully.');
         } catch (Exception $e) {
             return redirect()->back()->withError($e->getMessage());
         }

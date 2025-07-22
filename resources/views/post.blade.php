@@ -92,7 +92,7 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-warning btn-action"
-                                        onclick="editPost({{ $post->id }}, '{{ $post->title }}')">
+                                        onclick="editPost({{ $post->id }}, '{{ addslashes($post->title) }}', `{{ addslashes($post->description) }}`)">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger btn-action"
@@ -149,8 +149,8 @@
                             <input type="text" name="title" class="form-control" id="createTitle"
                                 placeholder="Enter title of the post..." required>
                         </div>
-                        <textarea name="description" id="" placeholder="Enter description of the post..." cols="75"
-                            rows="10"></textarea>
+                        <textarea name="description" id="" placeholder="Enter description of the post..." class="form-control"
+                            rows="5"></textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -173,21 +173,23 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="editForm">
+                <form id="editForm" method="POST" action="{{ route('post.edit', ['post' => ':postId']) }}">
+                    @csrf
                     <div class="modal-body">
-                        <input type="hidden" id="editPostId">
                         <div class="mb-3">
                             <label for="editTitle" class="form-label">Post Title</label>
-                            <input type="text" class="form-control" id="editTitle" required>
+                            <input type="text" class="form-control" id="editTitle" name="title" required>
                         </div>
                         <div class="mb-3">
                             <label for="editDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="editDescription" rows="5" required>{{ $post->description }}</textarea>
+                            <textarea class="form-control" id="editDescription" name="description" rows="5"
+                                required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning">
+                        <button type="submit" class="btn btn-warning" 
+                        >
                             <i class="fas fa-save me-2"></i>Update Post
                         </button>
                     </div>
@@ -241,7 +243,6 @@
                     <div class="mb-3">
                         <p id="viewContent"></p>
                     </div>
-                    <div id="viewTags"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -254,30 +255,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Global variables to store posts (In real MVC, this would come from the model/database)
         let posts = @json($data['posts']);
-
-
-        // Edit Post Form Handler
-        document.getElementById('editForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const postId = parseInt(document.getElementById('editPostId').value);
-            const description = document.getElementById('editDescription').value;
-
-            // Find and update post
-            const postIndex = posts.findIndex(post => post.id === postId);
-            if (postIndex !== -1) {
-                posts[postIndex] = {
-                    ...posts[postIndex],
-                    title: title,
-                    description: description,
-                };
-
-                window.location.reload();
-
-            }
-        });
 
         // Functions for CRUD operations
         function viewPost(postId) {
@@ -290,15 +268,23 @@
             }
         }
 
-        function editPost(postId, title, content) {
-            const post = posts.find(p => p.id === postId);
-            if (post) {
-                document.getElementById('editPostId').value = postId;
-                document.getElementById('editTitle').value = post.title;
-                document.getElementById('editTitle').value = post.title;
+        function editPost(postId, title, description) {
+            // Get the form element
+            const form = document.getElementById('editForm');
 
-                new bootstrap.Modal(document.getElementById('editModal')).show();
+            // Store the original action template if not already stored
+            if (!form.dataset.actionTemplate) {
+                form.dataset.actionTemplate = form.action;
             }
+            // Always reset the action to the template and replace :postId
+            form.action = form.dataset.actionTemplate.replace(':postId', postId);
+
+            // Set the form values
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editDescription').value = description;
+
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('editModal')).show();
         }
 
         function deletePost(postId, title) {
